@@ -1,0 +1,1 @@
+python segmentation.py train --dataset_path /mnt/d/Work/Datasets/synthcad --max_epochs 1000 --batch_size 8

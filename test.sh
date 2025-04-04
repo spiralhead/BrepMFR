@@ -1,0 +1,1 @@
+python segmentation.py test --dataset_path /mnt/d/Work/Datasets/synthcad --checkpoint ./results/BrepMFR/0321/161903/best.ckpt --batch_size 8

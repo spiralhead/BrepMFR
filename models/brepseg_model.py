@@ -189,7 +189,8 @@ class BrepSeg(pl.LightningModule):
         labels_np = np.array(self.label)
         self.pred = []
         self.label = []
-        per_face_comp = (preds_np == labels_np).astype(np.int)
+        # per_face_comp = (preds_np == labels_np).astype(np.int)
+        per_face_comp = (preds_np == labels_np).astype(np.int32)
         self.log("per_face_accuracy", np.mean(per_face_comp))
 
     def test_step(self, batch, batch_idx):
@@ -230,15 +231,15 @@ class BrepSeg(pl.LightningModule):
         face_feature[node_pos] = preds[:]
         out_face_feature = face_feature.long().detach().cpu().numpy()  # [n_graph, max_n_node]
         for i in range(n_graph):
-            # 计算每个graph的实际n_node
-            end_index = max_n_node - np.sum((out_face_feature[i][:] == -1).astype(np.int))
-            # masked出实际face feature
+            # Calculate the actual n_node for each graph
+            end_index = max_n_node - np.sum((out_face_feature[i][:] == -1).astype(np.int32))
+            # Masked out the actual face feature
             pred_feature = out_face_feature[i][:end_index + 1]  # (n_node)
-
-            output_path = pathlib.Path("/home/zhang/datasets_segmentation/2_val")
+            output_path = "./output/2_val"
+            pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
             file_name = "feature_" + str(batch["id"][i].long().detach().cpu().numpy()) + ".txt"
             file_path = os.path.join(output_path, file_name)
-            feature_file = open(file_path, mode="a")
+            feature_file = open(file_path, mode="w+")
             for j in range(end_index):
                 feature_file.write(str(pred_feature[j]))
                 feature_file.write("\n")
@@ -251,7 +252,7 @@ class BrepSeg(pl.LightningModule):
         self.pred = []
         self.label = []
 
-        per_face_comp = (preds_np == labels_np).astype(np.int)
+        per_face_comp = (preds_np == labels_np).astype(np.int32)
         self.log("per_face_accuracy", np.mean(per_face_comp))
         print("per_face_accuracy: %s" % np.mean(per_face_comp))
 
@@ -262,7 +263,7 @@ class BrepSeg(pl.LightningModule):
             if len(class_pos[0]) > 0:
                 class_i_preds = preds_np[class_pos]
                 class_i_label = labels_np[class_pos]
-                per_face_comp = (class_i_preds == class_i_label).astype(np.int)
+                per_face_comp = (class_i_preds == class_i_label).astype(np.int32)
                 per_class_acc.append(np.mean(per_face_comp))
                 print("class_%s_acc: %s" % (i+1, np.mean(per_face_comp)))
         self.log("per_class_accuracy", np.mean(per_class_acc))
@@ -276,11 +277,11 @@ class BrepSeg(pl.LightningModule):
             if len(pred_pos[0]) > 0 and len(label_pos[0]) > 0:
                 class_i_preds = preds_np[label_pos]
                 class_i_label = labels_np[label_pos]
-                Intersection = (class_i_preds == class_i_label).astype(np.int)
-                Union = (class_i_preds != class_i_label).astype(np.int)
+                Intersection = (class_i_preds == class_i_label).astype(np.int32)
+                Union = (class_i_preds != class_i_label).astype(np.int32)
                 class_i_preds_ = preds_np[pred_pos]
                 class_i_label_ = labels_np[pred_pos]
-                Union_ = (class_i_preds_ != class_i_label_).astype(np.int)
+                Union_ = (class_i_preds_ != class_i_label_).astype(np.int32)
                 per_class_iou.append(np.sum(Intersection) / (np.sum(Union) + np.sum(Intersection) + np.sum(Union_)))
         self.log("IoU", np.mean(per_class_iou))
         print("IoU: %s" % np.mean(per_class_iou))
@@ -293,7 +294,7 @@ class BrepSeg(pl.LightningModule):
         #     if len(class_pos[0]) > 0:
         #         class_i_preds = preds_np[class_pos]
         #         for j in range(0, self.num_classes):
-        #             per_face_comp = (class_i_preds == j).astype(np.int)
+        #             per_face_comp = (class_i_preds == j).astype(np.int32)
         #             acc_class_i = np.mean(per_face_comp)
         #             result_file.write(str(acc_class_i))
         #             if(j < self.num_classes-1):
